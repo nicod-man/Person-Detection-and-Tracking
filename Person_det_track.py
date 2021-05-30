@@ -79,7 +79,7 @@ def assign_detections_to_trackers(trackers, detections, iou_thrd = 0.3):
     
 
 
-def pipeline(img):
+def pipeline(img,det,video=False):
     '''
     Pipeline function for detection and tracking
     '''
@@ -91,9 +91,9 @@ def pipeline(img):
     global debug
     
     frame_count+=1
-    
-    img_dim = (img.shape[1], img.shape[0])
+
     z_box = det.get_localization(img) # measurement
+
     if debug:
        print('Frame:', frame_count)
        
@@ -186,7 +186,7 @@ def pipeline(img):
        print('Ending tracker_list: ',len(tracker_list))
        print('Ending good tracker_list: ',len(good_tracker_list))
     
-    cv2.imshow("frame",img)
+    #cv2.imshow("frame",img)
     return img
     
 if __name__ == "__main__":    
@@ -202,14 +202,7 @@ if __name__ == "__main__":
              plt.imshow(image_box)
              plt.show()
            
-    else: # test on a video file.
-        
-        # start=time.time()
-        # output = 'test_v7.mp4'
-        # clip1 = VideoFileClip("project_video.mp4")#.subclip(4,49) # The first 8 seconds doesn't have any cars...
-        # clip = clip1.fl_image(pipeline)
-        # clip.write_videofile(output, audio=False)
-        # end  = time.time()
+    else:
         cap = cv2.VideoCapture(0)
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         out = cv2.VideoWriter('output.avi',fourcc, 8.0, (640,480))

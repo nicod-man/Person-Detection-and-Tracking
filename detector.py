@@ -1,6 +1,7 @@
 '''
 Script to test traffic light localization and detection
 '''
+from tensorflow import keras
 
 import numpy as np
 import tensorflow as tf
@@ -18,6 +19,7 @@ import visualization_utils
 class PersonDetector(object):
     def __init__(self):
 
+
         self.car_boxes = []
         
         os.chdir(cwd)
@@ -26,9 +28,11 @@ class PersonDetector(object):
         # Single-shot-dectection with mobile net architecture trained on COCO
         # dataset
         detect_model_name = 'ssd_mobilenet_v1_coco_2017_11_17'
-        
         PATH_TO_CKPT = detect_model_name + '/frozen_inference_graph.pb'
-        
+
+        # Loading model
+        #self.model = keras.models.load_model(PATH_TO_CKPT)
+
         # setup tensorflow graph
         self.detection_graph = tf.Graph()
         
