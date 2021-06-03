@@ -79,7 +79,7 @@ def assign_detections_to_trackers(trackers, detections, iou_thrd = 0.3):
     
 
 
-def pipeline(img,det,video=False):
+def pipeline(img,det,camera=False,video=False):
     '''
     Pipeline function for detection and tracking
     '''
@@ -93,32 +93,17 @@ def pipeline(img,det,video=False):
     frame_count+=1
 
     z_box = det.get_localization(img) # measurement
-
-    if debug:
-       print('Frame:', frame_count)
-       
     x_box =[]
-    if debug: 
-        for i in range(len(z_box)):
-           img1= helpers.draw_box_label(img, z_box[i], box_color=(255, 0, 0))
-           plt.imshow(img1)
-        plt.show()
-    
+
     if len(tracker_list) > 0:
         for trk in tracker_list:
             x_box.append(trk.box)
+
     
     
     matched, unmatched_dets, unmatched_trks \
-    = assign_detections_to_trackers(x_box, z_box, iou_thrd = 0.3)  
-    if debug:
-         print('Detection: ', z_box)
-         print('x_box: ', x_box)
-         print('matched:', matched)
-         print('unmatched_det:', unmatched_dets)
-         print('unmatched_trks:', unmatched_trks)
-    
-         
+    = assign_detections_to_trackers(x_box, z_box, iou_thrd = 0.3)
+
     # Deal with matched detections     
     if matched.size >0:
         for trk_idx, det_idx in matched:
@@ -149,8 +134,8 @@ def pipeline(img,det,video=False):
             print(tmp_trk.id)
             tracker_list.append(tmp_trk)
             x_box.append(xx)
-    
-    # Deal with unmatched tracks       
+
+    # Deal with unmatched tracks
     if len(unmatched_trks)>0:
         for trk_idx in unmatched_trks:
             tmp_trk = tracker_list[trk_idx]
@@ -166,14 +151,18 @@ def pipeline(img,det,video=False):
     # The list of tracks to be annotated  
     good_tracker_list =[]
     for trk in tracker_list:
-        if ((trk.hits >= min_hits) and (trk.no_losses <=max_age)):
-             good_tracker_list.append(trk)
-             x_cv2 = trk.box
-             if debug:
-                 print('updated box: ', x_cv2)
-                 print()
-             img= helpers.draw_box_label(trk.id,img, x_cv2) # Draw the bounding boxes on the 
-                                             # images
+        if (camera):
+            if ((trk.hits >= min_hits) and (trk.no_losses <=max_age)):
+                good_tracker_list.append(trk)
+                x_cv2 = trk.box
+                img= helpers.draw_box_label(trk.id,img, x_cv2) # Draw the bounding boxes on the images
+        else:
+            good_tracker_list.append(trk)
+            x_cv2 = trk.box
+            img = helpers.draw_box_label(trk.id, img, x_cv2)  # Draw the bounding boxes on the images
+
+
+
     # Book keeping
     deleted_tracks = filter(lambda x: x.no_losses >max_age, tracker_list)  
     
