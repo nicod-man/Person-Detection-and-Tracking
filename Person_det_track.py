@@ -91,6 +91,7 @@ def pipeline(img,det,camera=False,video=False):
     global debug
     
     frame_count+=1
+    countPeopleDetected = 0
 
     z_box = det.get_localization(img) # measurement
     x_box =[]
@@ -160,6 +161,7 @@ def pipeline(img,det,camera=False,video=False):
             good_tracker_list.append(trk)
             x_cv2 = trk.box
             img = helpers.draw_box_label(trk.id, img, x_cv2)  # Draw the bounding boxes on the images
+            countPeopleDetected += 1
 
 
 
@@ -176,7 +178,7 @@ def pipeline(img,det,camera=False,video=False):
        print('Ending good tracker_list: ',len(good_tracker_list))
     
     #cv2.imshow("frame",img)
-    return img
+    return (img,countPeopleDetected)
     
 if __name__ == "__main__":    
     

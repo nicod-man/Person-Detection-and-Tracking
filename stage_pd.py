@@ -20,11 +20,15 @@ Predict class of an image
 # camera: parameter to specify the camera is used. If False, a single image is passed to predict people.
 def detectPeople(imagefile,camera=False):
 
-    inp = inputImage(imagefile)
+    if isinstance(imagefile, str):
+        inp = inputImage(imagefile)
+    else:
+        inp = imagefile
+
     if inp is not None:
         det = detector.PersonDetector()
-        new_img = Person_det_track.pipeline(inp,det,camera)
-        return new_img
+        return Person_det_track.pipeline(inp,det,camera)
+
     else:
         return (0, 'error')
 
@@ -138,7 +142,10 @@ class ModelServer(threading.Thread):
                         self.received = data
                         print('Received: %s' % data)
                         v = data.split(' ')
-                        if v[0] == 'EVAL' and len(v) > 1:
+                        if v[0]=='GETRESULT':
+                            ressend = (res + '\n\r').encode('UTF-8')
+                            self.connection.send(ressend)
+                        elif v[0] == 'EVAL' and len(v) > 1:
                             person_detection = detectPeople(v[1])
 
                             # Without resizing the window, it will fit the whole screen
@@ -152,6 +159,38 @@ class ModelServer(threading.Thread):
                             res = "People detected!"
                             ressend = (res + '\n\r').encode('UTF-8')
                             self.connection.send(ressend)
+                        elif v[0]=='RGB' and len(v) >= 3:
+                            print("\n---------Predicting faces----------\n")
+
+                            img_width = int(v[1])
+                            img_height = int(v[2])
+                            img_size = img_height * img_width * 3
+
+                            print("RGB image size: %d" %img_size)
+                            buf = self.recvall(img_size, buf)
+
+                            if buf is not None:
+                                print("Image received with size: %d" %len(buf))
+                                img_rcv = np.fromstring(buf, dtype='uint8')
+                                img_rcv = img_rcv.reshape((img_height, img_width, 3))
+
+                                # Image as array
+                                inp = np.array(img_rcv)
+
+                                # Prediction
+                                (people_detected,howMany) = detectPeople(inp)
+
+                                # Without resizing the window, it will fit the whole screen
+                                # cv2.namedWindow("detected", cv2.WINDOW_NORMAL)
+                                # cv2.resizeWindow("detected", img_width, img_height)
+                                #
+                                # cv2.imshow("detected", people_detected)
+                                # cv2.waitKey(6000)
+                                # cv2.destroyAllWindows()
+
+                                res = "%.3d" %howMany
+                                ressend = (res + '\n\r').encode('UTF-8')
+                                self.connection.send(ressend)
                         else:
                             print('Received: %s' % data)
                     elif (data == None or data == ""):
