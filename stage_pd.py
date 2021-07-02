@@ -31,12 +31,16 @@ def detectPeople(imagefile,camera=False):
         #    - confidence
         det = detector.PersonDetector()
 
-        # We need the confidence
-        img_full_np = np.asarray(inp)
+        # We need the confidence.
+        # If the image comes from the client, it is already a numpy array, otherwise we must transform it
+        img_full_np = inp
+        if isinstance(imagefile, str):
+            img_full_np = np.asarray(inp)
+
         (_,confidence) = det.get_localization(img_full_np)
 
-        img, howmany = Person_det_track.pipeline(inp,det,camera)
-        return (img, howmany, confidence)
+        img, howMany = Person_det_track.pipeline(inp,det,camera)
+        return (img, howMany, confidence)
 
     else:
         return (0, 'error')
@@ -187,7 +191,7 @@ class ModelServer(threading.Thread):
                                 img_rcv = img_rcv.reshape((img_height, img_width, 3))
 
                                 # Image as array
-                                inp = np.array(img_rcv)
+                                inp = np.asarray(img_rcv)
 
                                 # Prediction
                                 (people_detected,howMany,confidence) = detectPeople(inp)
@@ -205,7 +209,7 @@ class ModelServer(threading.Thread):
                                 if (howMany > 0):
                                     res = ''.join( (str(howMany),' '))
                                     for i in range(howMany):
-                                        res += confidence[i] + ' '
+                                        res += str(confidence[i]) + ' '
                                     res.rstrip()
 
                                 ressend = (res + '\n\r').encode('UTF-8')
