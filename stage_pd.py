@@ -26,8 +26,17 @@ def detectPeople(imagefile,camera=False):
         inp = imagefile
 
     if inp is not None:
+        # It returns:
+        #    - bounding boxes
+        #    - confidence
         det = detector.PersonDetector()
-        return Person_det_track.pipeline(inp,det,camera)
+
+        # We need the confidence
+        img_full_np = np.asarray(inp)
+        (_,confidence) = det.get_localization(img_full_np)
+
+        img, howmany = Person_det_track.pipeline(inp,det,camera)
+        return (img, howmany, confidence)
 
     else:
         return (0, 'error')
@@ -145,14 +154,17 @@ class ModelServer(threading.Thread):
                         if v[0]=='GETRESULT':
                             ressend = (res + '\n\r').encode('UTF-8')
                             self.connection.send(ressend)
+
                         elif v[0] == 'EVAL' and len(v) > 1:
-                            person_detection = detectPeople(v[1])
+
+
+                            (people_detected, howMany, confidence) = detectPeople(v[1])
 
                             # Without resizing the window, it will fit the whole screen
                             cv2.namedWindow("detected", cv2.WINDOW_NORMAL)
                             cv2.resizeWindow("detected", 959, 1280)
 
-                            cv2.imshow("detected", person_detection)
+                            cv2.imshow("detected", people_detected)
                             cv2.waitKey(6000)
                             cv2.destroyAllWindows()
 
@@ -178,7 +190,7 @@ class ModelServer(threading.Thread):
                                 inp = np.array(img_rcv)
 
                                 # Prediction
-                                (people_detected,howMany) = detectPeople(inp)
+                                (people_detected,howMany,confidence) = detectPeople(inp)
 
                                 # Without resizing the window, it will fit the whole screen
                                 # cv2.namedWindow("detected", cv2.WINDOW_NORMAL)
@@ -188,7 +200,14 @@ class ModelServer(threading.Thread):
                                 # cv2.waitKey(6000)
                                 # cv2.destroyAllWindows()
 
-                                res = "%.3d" %howMany
+                                # The format of the response will be:
+                                #  [howMany confidence[0] confidence[1] .. confidence[N]]
+                                if (howMany > 0):
+                                    res = ''.join( (str(howMany),' '))
+                                    for i in range(howMany):
+                                        res += confidence[i] + ' '
+                                    res.rstrip()
+
                                 ressend = (res + '\n\r').encode('UTF-8')
                                 self.connection.send(ressend)
                         else:

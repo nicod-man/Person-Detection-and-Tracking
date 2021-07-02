@@ -113,7 +113,7 @@ class PersonDetector(object):
                   plt.figure(figsize=(9,6))
                   plt.imshow(image)
                   plt.show()  
-              
+
               boxes=np.squeeze(boxes)
               classes =np.squeeze(classes)
               scores = np.squeeze(scores)
@@ -145,7 +145,7 @@ class PersonDetector(object):
                   
                   self.car_boxes = tmp_car_boxes
              
-        return self.car_boxes
+        return (self.car_boxes, scores)
         
 if __name__ == '__main__':
         

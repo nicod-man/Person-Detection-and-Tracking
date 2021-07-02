@@ -93,7 +93,7 @@ def pipeline(img,det,camera=False,video=False):
     frame_count+=1
     countPeopleDetected = 0
 
-    z_box = det.get_localization(img) # measurement
+    (z_box,confidence) = det.get_localization(img) # measurement
     x_box =[]
 
     if len(tracker_list) > 0:
