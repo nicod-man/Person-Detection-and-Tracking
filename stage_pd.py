@@ -39,8 +39,8 @@ def detectPeople(imagefile,camera=False):
 
         (_,confidence) = det.get_localization(img_full_np)
 
-        img, howMany = Person_det_track.pipeline(inp,det,camera)
-        return (img, howMany, confidence)
+        img, howManyPeopleDetected = Person_det_track.pipeline(inp,det,camera)
+        return (img, howManyPeopleDetected, confidence)
 
     else:
         return (0, 'error')
@@ -194,7 +194,7 @@ class ModelServer(threading.Thread):
                                 inp = np.asarray(img_rcv)
 
                                 # Prediction
-                                (people_detected,howMany,confidence) = detectPeople(inp)
+                                (people_detected,howManyPeopleDetected,confidence) = detectPeople(inp)
 
                                 # Without resizing the window, it will fit the whole screen
                                 # cv2.namedWindow("detected", cv2.WINDOW_NORMAL)
@@ -205,10 +205,10 @@ class ModelServer(threading.Thread):
                                 # cv2.destroyAllWindows()
 
                                 # The format of the response will be:
-                                #  [howMany confidence[0] confidence[1] .. confidence[N]]
-                                if (howMany > 0):
-                                    res = ''.join( (str(howMany),' '))
-                                    for i in range(howMany):
+                                #  [howManyPeopleDetected confidence[0] confidence[1] .. confidence[N]]
+                                if (howManyPeopleDetected > 0):
+                                    res = ''.join( (str(howManyPeopleDetected),' '))
+                                    for i in range(howManyPeopleDetected):
                                         res += str(confidence[i]) + ' '
                                     res.rstrip()
 
